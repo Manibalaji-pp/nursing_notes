@@ -1,44 +1,35 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
-# Use Streamlit secrets for security
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Load API key from Streamlit secrets
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-st.title("AI-Powered Nursing Notes Generator")
-st.write("Follow telemedicine and nursing protocols for patient care documentation.")
+# Streamlit UI
+st.title("Nursing Notes Assistant")
+st.write("Enter your patient details or prompts below, and the AI will help you generate nursing notes.")
 
-# Input fields for patient information
-diagnosis = st.text_input("Diagnosis")
-history = st.text_area("Patient History")
-condition = st.text_area("Current Patient Condition")
+# Input box for user prompt
+prompt = st.text_area("Enter your patient details / prompt:", height=200)
 
-# Combine inputs for AI prompt
-patient_data = f"""
-Diagnosis: {diagnosis}
-Patient History: {history}
-Current Condition: {condition}
-"""
-
+# Button to generate nursing notes
 if st.button("Generate Nursing Notes"):
-    if patient_data.strip():
-        prompt = f"""
-You are a professional telemedicine nurse. Based on the following patient information,
-generate nursing notes following standard nursing responsibilities and telemedicine documentation protocols.
-
-{patient_data}
-
-Nursing Notes:
-"""
-        # Call OpenAI API
-        response = openai.ChatCompletion.create(
-            model="gpt-4.1",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
-        )
-
-        # Display AI-generated nursing notes
-        nursing_notes = response["choices"][0]["message"]["content"]
-        st.subheader("AI-Generated Nursing Notes")
-        st.text_area("Nursing Notes", nursing_notes, height=300)
+    if prompt.strip() == "":
+        st.warning("Please enter some patient details or a prompt.")
     else:
-        st.warning("Please enter all patient details first.")
+        try:
+            # New API call
+            response = client.chat.completions.create(
+                model="gpt-4.1",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7
+            )
+
+            # Extract AI's response
+            nursing_notes = response.choices[0].message.content
+            st.subheader("Generated Nursing Notes:")
+            st.write(nursing_notes)
+
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
