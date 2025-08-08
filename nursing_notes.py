@@ -63,9 +63,9 @@ Instructions for the AI Model:
 5. Be Comprehensive but Concise: Include all pertinent details without unnecessary verbosity. 
 6. Do not include any information that is not relevant or directly related to the doctor's orders.
 7. Standard Protocols: NANDA-I (North American Nursing Diagnosis Association International) to be adhered to, especially for the follow ups.
-8. Format: Give appropirate spacing between the sections. If any doctor's to-list has spelling or formatting errors, then correct them. Use bullet points.
+8. Format: Give appropriate spacing between the sections. If any doctor's to-list has spelling or formatting errors, then correct them. Use bullet points.
 9. Salutations: Directly jump into the note without any salutations or messaging before AI output.
-10. Markdown: Give ouput in markdown format
+10. Markdown: Give output in markdown format
 """
 
 def generate_nursing_note(prompt, model):
@@ -128,7 +128,9 @@ def main():
                     
                     if nursing_notes:
                         st.markdown("### 📋 Generated Nursing Notes")
-                        st.markdown(nursing_notes)
+                        st.markdown(nursing_notes, unsafe_allow_html=True)  # Rendered nicely
+                        st.markdown("#### 🗒 Raw Markdown Output")
+                        st.code(nursing_notes, language="markdown")  # Exact formatting preserved
 
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         filename = f"nursing_notes_{timestamp}.txt"
@@ -154,3 +156,4 @@ NURSING NOTES:
 
 if __name__ == "__main__":
     main()
+
