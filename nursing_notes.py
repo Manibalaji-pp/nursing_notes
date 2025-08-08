@@ -54,7 +54,8 @@ def generate_nursing_note(doctor_notes, patient_info, model):
     • Follow up on To-do
         - Each doctor's note has a to-do list. Your goal is to convert them into simple and actionable items.
         - For each of the to-do list items, generate the list of things that the nurse needs to check based on the Instructions for the Nusring Follow-Up Note based on patient condition
-        - At max give 3 actionable items per to-do list item. Keep the language simple and concise. Use bullet points, and medical conventions.
+        - At max give 3 actionable items per to-do list item. Keep the language simple and concise. 
+        - Use bullet points, and medical conventions.
         - Double check if infection bundle protocol is needed.
         - Administer the medications as per the doctor's orders.
     Instructions for the AI Model:
@@ -67,7 +68,6 @@ def generate_nursing_note(doctor_notes, patient_info, model):
     7. Standard Protocols: NANDA-I (North American Nursing Diagnosis Association International) to be adhered to, especially for the follow ups.
     8. Format: Give appropirate spacing between the sections. If any doctor's to-list has spelling or formatting errors, then correct them.
     9. Salutations: Directly jump into the note without any salutations or messaging before AI output.
-    10.bullet points: Alloutput should be in bullet points
     """
     
     try:
@@ -194,4 +194,5 @@ NURSING NOTES:
 
 if __name__ == "__main__":
     main()
+
 
