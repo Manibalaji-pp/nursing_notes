@@ -65,10 +65,10 @@ Instructions for the AI Model:
 7. Standard Protocols: NANDA-I (North American Nursing Diagnosis Association International) to be adhered to, especially for the follow ups.
 8. Format: Give appropirate spacing between the sections. If any doctor's to-list has spelling or formatting errors, then correct them. Use bullet points.
 9. Salutations: Directly jump into the note without any salutations or messaging before AI output.
+10. Markdown: Give ouput in markdown format
 """
 
 def generate_nursing_note(prompt, model):
-    """Send prompt to Gemini and get nursing note."""
     try:
         response = model.generate_content(prompt)
         return response.text
@@ -76,92 +76,81 @@ def generate_nursing_note(prompt, model):
         st.error(f"Error generating nursing notes: {str(e)}")
         return None
 
+# Initialize session state for prompt
+if "edited_prompt" not in st.session_state:
+    st.session_state.edited_prompt = ""
+
+# Live update prompt whenever inputs change
+def update_prompt():
+    st.session_state.edited_prompt = build_prompt(
+        st.session_state.doctor_notes,
+        st.session_state.nursing_observations
+    )
+
 def main():
-    # Header
     st.title("🩺 Nurse Note Generator")
     st.markdown("Streamline nursing documentation based on physician orders")
     
-    # Main content
     col1, col2 = st.columns([1, 1])
     
     with col1:
         st.header("📝 Doctor's Notes Input")
-        doctor_notes = st.text_area(
+        st.text_area(
             "Enter the doctor's notes, orders, and treatment plans:",
-            height=200
+            height=200,
+            key="doctor_notes",
+            on_change=update_prompt
         )
 
         st.header("📝 Nursing Observations")
-        nursing_observations = st.text_area(
+        st.text_area(
             "Enter your observations of the patient since the doctor's note, if any:",
-            height=200
+            height=200,
+            key="nursing_observations",
+            on_change=update_prompt
         )
 
-        # Build prompt live as soon as doctor notes change
-        if doctor_notes.strip():
-            default_prompt = build_prompt(doctor_notes, nursing_observations)
-            if "edited_prompt" not in st.session_state:
-                st.session_state.edited_prompt = default_prompt
+    with col2:
+        st.header("✏️ Review & Edit Prompt")
+        st.text_area(
+            "Edit Prompt before sending to AI:",
+            height=400,
+            key="edited_prompt"
+        )
 
-            with st.expander("🔍 Review & Edit Prompt Before Sending to AI", expanded=True):
-                st.session_state.edited_prompt = st.text_area(
-                    "Edit Prompt",
-                    value=st.session_state.edited_prompt,
-                    height=400
-                )
-
-            # Generate button
-            if st.button("🔄 Generate Nursing Notes", type="primary", use_container_width=True):
+        if st.button("🔄 Generate Nursing Notes", type="primary", use_container_width=True):
+            if not st.session_state.doctor_notes.strip():
+                st.warning("⚠️ Please enter doctor's notes to generate nursing documentation.")
+            else:
                 with st.spinner("Generating comprehensive nursing notes..."):
                     model = initialize_gemini()
                     nursing_notes = generate_nursing_note(st.session_state.edited_prompt, model)
                     
                     if nursing_notes:
-                        st.session_state.nursing_notes = nursing_notes
-        else:
-            st.info("✏️ Enter doctor's notes to see and edit the AI prompt.")
+                        st.markdown("### 📋 Generated Nursing Notes")
+                        st.markdown(nursing_notes)
 
-    with col2:
-        st.header("📋 Generated Nursing Notes")
-        if "nursing_notes" in st.session_state:
-            st.markdown("### Generated Nursing Notes")
-            st.markdown(st.session_state.nursing_notes)
-
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"nursing_notes_{timestamp}.txt"
-
-            download_content = f"""NURSING NOTES
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        filename = f"nursing_notes_{timestamp}.txt"
+                        download_content = f"""NURSING NOTES
 Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 DOCTOR'S NOTES:
-{doctor_notes}
+{st.session_state.doctor_notes}
 
 NURSING OBSERVATIONS:
-{nursing_observations}
+{st.session_state.nursing_observations}
 
 NURSING NOTES:
-{st.session_state.nursing_notes}
+{nursing_notes}
 """
-            st.download_button(
-                label="📥 Download Nursing Notes",
-                data=download_content,
-                file_name=filename,
-                mime="text/plain",
-                use_container_width=True
-            )
-        else:
-            st.info("Generated notes will appear here after you click the button.")
-
-    with st.expander("ℹ️ How to Use This Tool"):
-        st.markdown("""
-        1. Enter doctor's notes and optional nursing observations
-        2. Review & edit the prompt (auto-filled) in the expander
-        3. Click **Generate Nursing Notes**
-        4. Review and download the results
-        """)
-
-    st.markdown("---")
-    st.markdown("This tool assists with nursing documentation but does not replace clinical judgment.")
+                        st.download_button(
+                            label="📥 Download Nursing Notes",
+                            data=download_content,
+                            file_name=filename,
+                            mime="text/plain",
+                            use_container_width=True
+                        )
 
 if __name__ == "__main__":
     main()
